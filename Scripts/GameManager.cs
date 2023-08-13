@@ -10,6 +10,7 @@ public class GameManager : MonoBehaviour
     //UI
     public GameObject diffSelect, prefSelect, birdSelect, birdGrid;
     public Image prefBirdImg, birdImg;
+    public List<Image> solutionPlaces;
     public TMP_Text prefText, reqText;
     public Color white, pink, yellow, orange, red, green, blue, black;
     private Color[] colors = new Color[8];
@@ -18,15 +19,14 @@ public class GameManager : MonoBehaviour
     private bool hardMode = false, hardPreference = false;
 
     public List<Bird> birds = new List<Bird>();
-    public List<int[]> bestSolutions = new List<int[]>();
+    public List<List<int>> bestSolutions = new List<List<int>>();
 
-    private int leastErrorsFound = -1;
-    private int indexEvaluating = 0;
+    private int leastErrorsFound = -1, arrangementsEvaluated = 0;
     private int birdManaging = 0;
 
     private void Start()
     {
-        //put colors in a array to iterate over
+        //put colors in a array to iterate over (order matters!)
         colors = new Color[8] { white, pink, yellow, orange, red, green, blue, black };
 
         //assign colors to bird select items
@@ -84,7 +84,6 @@ public class GameManager : MonoBehaviour
                 //no
                 IncrementBirdManaging();
                 return;
-                break;
 
             //yes
             case PreferenceType.shareCornerWith:
@@ -170,17 +169,74 @@ public class GameManager : MonoBehaviour
             //done
             prefSelect.SetActive(false);
             birdSelect.SetActive(false);
+
+            List<int> allBirds = new List<int> { 0, 1, 2, 3, 4, 5, 6, 7 };
+            Solve(allBirds, new List<int>());
+
+            for (int i = 0; i < solutionPlaces.Count(); i++)
+            {
+                solutionPlaces[i].color = colors[bestSolutions[0][i]]; //for now, just the first found solution
+            }
+            Debug.Log("Tested " + arrangementsEvaluated + " arrangements");
         }
     }
 
-    public void Solve(int currentIndex, int currentBird, Bird[] remainingBirds)
+    public void Solve(List<int> remainingBirds, List<int> birdIndexes)
     {
-        //assign next index to all birds
+        if (remainingBirds.Count() == 0)
+        {
+            //All birds are placed, solve
+            arrangementsEvaluated++; //count evaluations
 
-        //evaluate all birds, count errors
+            //assign index to all birds
+            for (int i = 0; i < birdIndexes.Count; i++)
+            {
+                birds[birdIndexes[i]].position = i;
+            }
 
-        //evaluate error count
+            //Evaluate and count errors
 
-        //repeat untill finished (count solutions to ensure all 8! hav been evaluated?)
+            int errors = 0;
+            foreach (Bird bird in birds)
+            {
+                if (!Preferences.EvaluateRequirement(bird.easyBirdPreference, bird, bird.easyOtherBird))
+                {
+                    errors++;
+                }
+                if (hardMode)
+                {
+                    if (!Preferences.EvaluateRequirement(bird.hardBirdPreference, bird, bird.hardOtherBird))
+                    {
+                        errors++;
+                    }
+                }
+            }
+
+            if (errors < leastErrorsFound || leastErrorsFound == -1)
+            {
+                leastErrorsFound = errors;
+                bestSolutions.Clear();
+                bestSolutions.Add(birdIndexes);
+            }
+            else if (errors == leastErrorsFound)
+            {
+                bestSolutions.Add(birdIndexes);
+            }
+        }
+
+        //Generate next unique arrangement of numbers 0-7
+        else
+        {
+            for (int i = 0; i < remainingBirds.Count(); i++)
+            {
+                //generate a copy of lists
+                List<int> newRemainingBirds = remainingBirds.ToList();
+                List<int> birdIndexExtended = birdIndexes.ToList();
+
+                birdIndexExtended.Add(remainingBirds[i]);
+                newRemainingBirds.Remove(remainingBirds[i]);
+                Solve(newRemainingBirds, birdIndexExtended);
+            }
+        }
     }
 }

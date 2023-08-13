@@ -86,8 +86,8 @@ public static class Preferences
     {
         bool result = true;
 
-        if (!EvaluateRequirement(otherBird.easyBirdPreference, thisBird, otherBird)) result = false;
-        if (!EvaluateRequirement(otherBird.hardBirdPreference, thisBird, otherBird)) result = false;
+        if (!EvaluateRequirement(otherBird.easyBirdPreference, thisBird, otherBird.easyOtherBird)) result = false;
+        if (!EvaluateRequirement(otherBird.hardBirdPreference, thisBird, otherBird.hardOtherBird)) result = false;
 
         return result;
     }
