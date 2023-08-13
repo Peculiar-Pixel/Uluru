@@ -8,7 +8,7 @@ using TMPro;
 public class GameManager : MonoBehaviour
 {
     //UI
-    public GameObject diffSelect, prefSelect, birdSelect, birdGrid;
+    public GameObject diffSelect, prefSelect, birdSelect, solution, birdGrid;
     public Image prefBirdImg, birdImg;
     public List<Image> solutionPlaces;
     public TMP_Text prefText, reqText;
@@ -57,7 +57,11 @@ public class GameManager : MonoBehaviour
     public void GetDifficulty(bool hard)
     {
         hardMode = hard;
+
         diffSelect.SetActive(false);
+        prefSelect.SetActive(true);
+        birdSelect.SetActive(false);
+        solution.SetActive(false);
     }
 
     public void GetPreference(int pref)
@@ -115,7 +119,10 @@ public class GameManager : MonoBehaviour
                 break;
         }
 
+        diffSelect.SetActive(false);
         prefSelect.SetActive(false);
+        birdSelect.SetActive(true);
+        solution.SetActive(false);
     }
 
     public void GetOtherBird(int typ)
@@ -162,13 +169,19 @@ public class GameManager : MonoBehaviour
         {
             prefBirdImg.color = colors[birdManaging];
             birdImg.color = colors[birdManaging];
+
+            diffSelect.SetActive(false);
             prefSelect.SetActive(true);
+            birdSelect.SetActive(false);
+            solution.SetActive(false);
         }
         else
         {
             //done
+            diffSelect.SetActive(false);
             prefSelect.SetActive(false);
             birdSelect.SetActive(false);
+            solution.SetActive(true);
 
             List<int> allBirds = new List<int> { 0, 1, 2, 3, 4, 5, 6, 7 };
             Solve(allBirds, new List<int>());
