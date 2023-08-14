@@ -12,8 +12,8 @@ public class GameManager : MonoBehaviour
     public Image prefBirdImg, birdImg;
     public List<Image> solutionPlaces;
     public TMP_Text prefText, reqText;
-    public Color white, pink, yellow, orange, red, green, blue, black;
-    private Color[] colors = new Color[8];
+    public Sprite white, pink, yellow, orange, red, green, blue, black;
+    private Sprite[] birdArt = new Sprite[8];
     //
 
     private bool hardMode = false, hardPreference = false;
@@ -27,13 +27,13 @@ public class GameManager : MonoBehaviour
     private void Start()
     {
         //put colors in a array to iterate over (order matters!)
-        colors = new Color[8] { white, pink, yellow, orange, red, green, blue, black };
+        birdArt = new Sprite[8] { white, pink, yellow, orange, red, green, blue, black };
 
         //assign colors to bird select items
         Image[] gridItems = birdGrid.GetComponentsInChildren<Image>();
         for (int i = 0; i < gridItems.Length; i++)
         {
-            gridItems[i].color = colors[i];
+            gridItems[i].sprite = birdArt[i];
         }
 
         //Generate list of birds
@@ -167,8 +167,8 @@ public class GameManager : MonoBehaviour
 
         if (birdManaging < 8)
         {
-            prefBirdImg.color = colors[birdManaging];
-            birdImg.color = colors[birdManaging];
+            prefBirdImg.sprite = birdArt[birdManaging];
+            birdImg.sprite = birdArt[birdManaging];
 
             diffSelect.SetActive(false);
             prefSelect.SetActive(true);
@@ -188,7 +188,7 @@ public class GameManager : MonoBehaviour
 
             for (int i = 0; i < solutionPlaces.Count(); i++)
             {
-                solutionPlaces[i].color = colors[bestSolutions[0][i]]; //for now, just the first found solution
+                solutionPlaces[i].sprite = birdArt[bestSolutions[0][i]]; //for now, just the first found solution
             }
             Debug.Log("Tested " + arrangementsEvaluated + " arrangements");
         }
