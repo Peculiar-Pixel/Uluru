@@ -8,12 +8,16 @@ using TMPro;
 public class GameManager : MonoBehaviour
 {
     //UI
-    public GameObject diffSelect, prefSelect, birdSelect, solution, birdGrid;
+    public GameObject diffSelect, prefSelect, birdSelect, solution; //UI pages
     public Image prefBirdImg, birdImg;
+
+    private List<Image> otherBirds;
+    public Image whiteB, pinkB, yellowB, orangeB, redB, greenB, blueB, blackB;
+
     public List<Image> solutionPlaces;
-    public TMP_Text prefText, reqText;
-    public Sprite white, pink, yellow, orange, red, green, blue, black;
-    private Sprite[] birdArt = new Sprite[8];
+    public TMP_Text prefText, reqText, solutionNumber, errorCount, timer;
+    public Color white, pink, yellow, orange, red, green, blue, black;
+    private Color[] birdColors = new Color[8];
     //
 
     private bool hardMode = false, hardPreference = false;
@@ -22,18 +26,18 @@ public class GameManager : MonoBehaviour
     public List<List<int>> bestSolutions = new List<List<int>>();
 
     private int leastErrorsFound = -1, arrangementsEvaluated = 0;
-    private int birdManaging = 0;
+    private int birdManaging = 0, solutionViewing = 0;
 
     private void Start()
     {
         //put colors in a array to iterate over (order matters!)
-        birdArt = new Sprite[8] { white, pink, yellow, orange, red, green, blue, black };
+        birdColors = new Color[8] { white, pink, yellow, orange, red, green, blue, black };
 
         //assign colors to bird select items
-        Image[] gridItems = birdGrid.GetComponentsInChildren<Image>();
-        for (int i = 0; i < gridItems.Length; i++)
+        otherBirds = new List<Image> { whiteB, pinkB, yellowB, orangeB, redB, greenB, blueB, blackB };
+        for (int i = 0; i < otherBirds.Count(); i++)
         {
-            gridItems[i].sprite = birdArt[i];
+            otherBirds[i].color = birdColors[i];
         }
 
         //Generate list of birds
@@ -91,31 +95,31 @@ public class GameManager : MonoBehaviour
 
             //yes
             case PreferenceType.shareCornerWith:
-                prefText.text = "will share a corner with";
+                ChangeText(prefText, "will share a corner with");
                 break;
 
             case PreferenceType.sameAs:
-                prefText.text = "wants the same as";
+                ChangeText(prefText, "wants the same as");
                 break;
 
             case PreferenceType.oppositeAs:
-                prefText.text = "wants the oppsite of";
+                ChangeText(prefText, "wants the oppsite of");
                 break;
 
             case PreferenceType.nextTo:
-                prefText.text = "will sit next to";
+                ChangeText(prefText, "will sit next to");
                 break;
 
             case PreferenceType.acrossFrom:
-                prefText.text = "will sit across from";
+                ChangeText(prefText, "will sit across from");
                 break;
 
             case PreferenceType.twoSpacesFrom:
-                prefText.text = "will be at least two spaces from";
+                ChangeText(prefText, "will be at least two spaces from");
                 break;
 
             case PreferenceType.neitherNextToNorAcrossFrom:
-                prefText.text = "will not sit across from nor next to";
+                ChangeText(prefText, "will not sit across from nor next to");
                 break;
         }
 
@@ -145,7 +149,7 @@ public class GameManager : MonoBehaviour
 
     private void IncrementBirdManaging()
     {
-        reqText.text = "Preference 1";
+        ChangeText(reqText, "Preference 1");
 
         if (hardMode)
         {
@@ -157,7 +161,7 @@ public class GameManager : MonoBehaviour
             else
             {
                 hardPreference = true;
-                reqText.text = "Preference 2";
+                ChangeText(reqText, "Preference 2");
             }
         }
         else
@@ -167,8 +171,8 @@ public class GameManager : MonoBehaviour
 
         if (birdManaging < 8)
         {
-            prefBirdImg.sprite = birdArt[birdManaging];
-            birdImg.sprite = birdArt[birdManaging];
+            prefBirdImg.color = birdColors[birdManaging];
+            birdImg.color = birdColors[birdManaging];
 
             diffSelect.SetActive(false);
             prefSelect.SetActive(true);
@@ -186,11 +190,36 @@ public class GameManager : MonoBehaviour
             List<int> allBirds = new List<int> { 0, 1, 2, 3, 4, 5, 6, 7 };
             Solve(allBirds, new List<int>());
 
-            for (int i = 0; i < solutionPlaces.Count(); i++)
-            {
-                solutionPlaces[i].sprite = birdArt[bestSolutions[0][i]]; //for now, just the first found solution
-            }
-            Debug.Log("Tested " + arrangementsEvaluated + " arrangements");
+            var solutionStartTime = System.DateTime.Now;
+            SwitchSolution(0);
+            var solutionEndTime = System.DateTime.Now;
+
+            ChangeText(errorCount, "Least amount of errors is " + leastErrorsFound);
+            ChangeText(timer, "evaluated " + arrangementsEvaluated + " arrangements in " + (solutionEndTime - solutionStartTime).TotalMilliseconds + " ms");
+        }
+    }
+
+    private void ChangeText(TMP_Text text, string newText)
+    {
+        text.text = newText;
+        foreach (TMP_Text txt in text.gameObject.GetComponentsInChildren<TMP_Text>())
+        {
+            txt.text = newText;
+        }
+        //GetComponentInChildren<TMP_Text>().text = newText;
+    }
+
+    public void SwitchSolution(int dir)
+    {
+        solutionViewing += dir;
+        solutionViewing = solutionViewing >= bestSolutions.Count ? 0 : solutionViewing;
+        solutionViewing = solutionViewing < 0 ? bestSolutions.Count - 1 : solutionViewing;
+
+        ChangeText(solutionNumber, "solution " + (solutionViewing + 1) + " of " + bestSolutions.Count());
+
+        for (int i = 0; i < solutionPlaces.Count(); i++)
+        {
+            solutionPlaces[i].color = birdColors[bestSolutions[solutionViewing][i]];
         }
     }
 
@@ -208,7 +237,6 @@ public class GameManager : MonoBehaviour
             }
 
             //Evaluate and count errors
-
             int errors = 0;
             foreach (Bird bird in birds)
             {
