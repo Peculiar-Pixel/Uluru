@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using System.Linq;
 
-[System.Serializable]
+//[System.Serializable]
 public class ParallaxScroller : MonoBehaviour
 {
     [SerializeField] public List<BackgroundLayer> backgroundLayers = new List<BackgroundLayer>();
