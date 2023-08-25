@@ -12,8 +12,8 @@ public class UI : MonoBehaviour
     //Misc
     public Image currentBirdImg_Pref, currentBirdImg_OtherBird;
     public TMP_Text currentPrefTxt, prefDescriptionTxt, errorCount_Manual, errorCount_Brute, timeTxt, currentSolutionTxt;
-
     //
+
     public List<GameObject> menus;
     private GameManager gameManager;
 
