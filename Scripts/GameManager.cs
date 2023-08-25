@@ -1,45 +1,20 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.UI;
 using System.Linq;
-using TMPro;
 
 public class GameManager : MonoBehaviour
 {
-    //UI
-    public GameObject diffSelect, prefSelect, birdSelect, solution; //UI pages
-    public Image prefBirdImg, birdImg;
-
-    private List<Image> otherBirds;
-    public Image whiteB, pinkB, yellowB, orangeB, redB, greenB, blueB, blackB;
-
-    public List<Image> solutionPlaces;
-    public TMP_Text prefText, reqText, solutionNumber, errorCount, timer;
-    public Color white, pink, yellow, orange, red, green, blue, black;
-    private Color[] birdColors = new Color[8];
-    //
-
-    private bool hardMode = false, hardPreference = false;
+    public bool hardMode = false;
 
     public List<Bird> birds = new List<Bird>();
     public List<List<int>> bestSolutions = new List<List<int>>();
 
-    private int leastErrorsFound = -1, arrangementsEvaluated = 0;
+    public int leastErrorsFound = -1, arrangementsEvaluated = 0;
     private int birdManaging = 0, solutionViewing = 0;
 
     private void Start()
     {
-        //put colors in a array to iterate over (order matters!)
-        birdColors = new Color[8] { white, pink, yellow, orange, red, green, blue, black };
-
-        //assign colors to bird select items
-        otherBirds = new List<Image> { whiteB, pinkB, yellowB, orangeB, redB, greenB, blueB, blackB };
-        for (int i = 0; i < otherBirds.Count(); i++)
-        {
-            otherBirds[i].color = birdColors[i];
-        }
-
         //Generate list of birds
         for (int i = 0; i < 8; i++)
         {
@@ -58,174 +33,9 @@ public class GameManager : MonoBehaviour
         }
     }
 
-    public void GetDifficulty(bool hard)
-    {
-        hardMode = hard;
-
-        diffSelect.SetActive(false);
-        prefSelect.SetActive(true);
-        birdSelect.SetActive(false);
-        solution.SetActive(false);
-    }
-
-    public void GetPreference(int pref)
-    {
-        PreferenceType preferenceType = (PreferenceType)pref;
-
-        if (hardPreference)
-        {
-            birds[birdManaging].hardBirdPreference = preferenceType;
-        }
-        else
-        {
-            birds[birdManaging].easyBirdPreference = preferenceType;
-        }
-
-        //Does this preference refer to another bird?
-        switch (preferenceType)
-        {
-            case PreferenceType.none:
-            case PreferenceType.longSide:
-            case PreferenceType.shortSide:
-            case PreferenceType.boomerang:
-            case PreferenceType.notBoomerang:
-                //no
-                IncrementBirdManaging();
-                return;
-
-            //yes
-            case PreferenceType.shareCornerWith:
-                ChangeText(prefText, "will share a corner with");
-                break;
-
-            case PreferenceType.sameAs:
-                ChangeText(prefText, "wants the same as");
-                break;
-
-            case PreferenceType.oppositeAs:
-                ChangeText(prefText, "wants the oppsite of");
-                break;
-
-            case PreferenceType.nextTo:
-                ChangeText(prefText, "will sit next to");
-                break;
-
-            case PreferenceType.acrossFrom:
-                ChangeText(prefText, "will sit across from");
-                break;
-
-            case PreferenceType.twoSpacesFrom:
-                ChangeText(prefText, "will be at least two spaces from");
-                break;
-
-            case PreferenceType.neitherNextToNorAcrossFrom:
-                ChangeText(prefText, "will not sit across from nor next to");
-                break;
-        }
-
-        diffSelect.SetActive(false);
-        prefSelect.SetActive(false);
-        birdSelect.SetActive(true);
-        solution.SetActive(false);
-    }
-
-    public void GetOtherBird(int typ)
-    {
-        BirdTypes type = (BirdTypes)typ;
-
-        Bird otherBird = birds.FirstOrDefault(b => b.type == type);
-
-        if (hardPreference)
-        {
-            birds[birdManaging].hardOtherBird = otherBird;
-        }
-        else
-        {
-            birds[birdManaging].easyOtherBird = otherBird;
-        }
-
-        IncrementBirdManaging();
-    }
-
-    private void IncrementBirdManaging()
-    {
-        ChangeText(reqText, "Preference 1");
-
-        if (hardMode)
-        {
-            if (hardPreference)
-            {
-                birdManaging++;
-                hardPreference = false;
-            }
-            else
-            {
-                hardPreference = true;
-                ChangeText(reqText, "Preference 2");
-            }
-        }
-        else
-        {
-            birdManaging++;
-        }
-
-        if (birdManaging < 8)
-        {
-            prefBirdImg.color = birdColors[birdManaging];
-            birdImg.color = birdColors[birdManaging];
-
-            diffSelect.SetActive(false);
-            prefSelect.SetActive(true);
-            birdSelect.SetActive(false);
-            solution.SetActive(false);
-        }
-        else
-        {
-            //done
-            diffSelect.SetActive(false);
-            prefSelect.SetActive(false);
-            birdSelect.SetActive(false);
-            solution.SetActive(true);
-
-            List<int> allBirds = new List<int> { 0, 1, 2, 3, 4, 5, 6, 7 };
-            Solve(allBirds, new List<int>());
-
-            var solutionStartTime = System.DateTime.Now;
-            SwitchSolution(0);
-            var solutionEndTime = System.DateTime.Now;
-
-            ChangeText(errorCount, "Least amount of errors is " + leastErrorsFound);
-            ChangeText(timer, "evaluated " + arrangementsEvaluated + " arrangements in " + (solutionEndTime - solutionStartTime).TotalMilliseconds + " ms");
-        }
-    }
-
-    private void ChangeText(TMP_Text text, string newText)
-    {
-        text.text = newText;
-        foreach (TMP_Text txt in text.gameObject.GetComponentsInChildren<TMP_Text>())
-        {
-            txt.text = newText;
-        }
-        //GetComponentInChildren<TMP_Text>().text = newText;
-    }
-
-    public void SwitchSolution(int dir)
-    {
-        solutionViewing += dir;
-        solutionViewing = solutionViewing >= bestSolutions.Count ? 0 : solutionViewing;
-        solutionViewing = solutionViewing < 0 ? bestSolutions.Count - 1 : solutionViewing;
-
-        ChangeText(solutionNumber, "solution " + (solutionViewing + 1) + " of " + bestSolutions.Count());
-
-        for (int i = 0; i < solutionPlaces.Count(); i++)
-        {
-            solutionPlaces[i].color = birdColors[bestSolutions[solutionViewing][i]];
-        }
-    }
-
     public void Solve(List<int> remainingBirds, List<int> birdIndexes)
     {
-        if (remainingBirds.Count() == 0)
+        if (remainingBirds.Count == 0)
         {
             //All birds are placed, solve
             arrangementsEvaluated++; //count evaluations
@@ -268,7 +78,7 @@ public class GameManager : MonoBehaviour
         //Generate next unique arrangement of numbers 0-7
         else
         {
-            for (int i = 0; i < remainingBirds.Count(); i++)
+            for (int i = 0; i < remainingBirds.Count; i++)
             {
                 //generate a copy of lists
                 List<int> newRemainingBirds = remainingBirds.ToList();
