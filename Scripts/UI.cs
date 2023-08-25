@@ -18,7 +18,7 @@ public class UI : MonoBehaviour
     private GameManager gameManager;
 
     public List<Color> colors;
-    public Color neutralColor;
+    public Color neutralColor, disabledColor;
 
     public List<Image> boardPositionImgs_Manual, boardPositionImgs_Brute, otherBirds, birdPawns;
 
@@ -68,16 +68,6 @@ public class UI : MonoBehaviour
         SceneManager.LoadScene(SceneManager.GetActiveScene().name);
     }
 
-    private void UpdateColor(Image img, int i)
-    {
-        img.color = colors[i];
-    }
-
-    private void UpdateColor(Image img, Color color)
-    {
-        img.color = color;
-    }
-
     private void NextBird()
     {
         if (hardSettings) //if currently managing hard settings
@@ -121,6 +111,30 @@ public class UI : MonoBehaviour
         }
     }
 
+    public void SwitchToBruteForce()
+    {
+        SwitchMenu(4);
+        BruteForce();
+    }
+
+    public void EvaluateNew()
+    {
+        ChangeText(errorCount_Manual, "");
+        foreach (Image birdPawnImg in birdPawns)
+        {
+            birdPawnImg.gameObject.SetActive(true);
+        }
+        manualCurrentSpot = 0;
+        manualSolution = new int[8];
+
+        foreach (Image spotImg in boardPositionImgs_Manual)
+        {
+            spotImg.color = disabledColor;
+            spotImg.gameObject.transform.GetChild(0).gameObject.SetActive(false);
+        }
+        boardPositionImgs_Manual[0].color = neutralColor;
+    }
+
     //************************************** Game Progression **************************************
     public void GetDifficulty(bool hard)
     {
@@ -128,7 +142,7 @@ public class UI : MonoBehaviour
         gameManager.hardMode = hard;
 
         //Continue to the next page (preference select)
-        UpdateColor(currentBirdImg_Pref, currentBird);
+        currentBirdImg_Pref.color = colors[currentBird];
         SwitchMenu(1);
     }
 
@@ -158,7 +172,7 @@ public class UI : MonoBehaviour
             case PreferenceType.notBoomerang:
                 NextBird();
                 if (currentBird >= 8) return;
-                UpdateColor(currentBirdImg_Pref, currentBird);
+                currentBirdImg_Pref.color = colors[currentBird];
                 return;
 
             //yes
@@ -191,7 +205,7 @@ public class UI : MonoBehaviour
                 break;
         }
 
-        UpdateColor(currentBirdImg_OtherBird, currentBird);
+        currentBirdImg_OtherBird.color = colors[currentBird];
         SwitchMenu(2); //bird select
     }
 
@@ -212,7 +226,7 @@ public class UI : MonoBehaviour
 
         NextBird();
         if (currentBird >= 8) return;
-        UpdateColor(currentBirdImg_Pref, currentBird);
+        currentBirdImg_Pref.color = colors[currentBird];
         SwitchMenu(1);
     }
 
@@ -225,7 +239,7 @@ public class UI : MonoBehaviour
         }
         else
         {
-            UpdateColor(boardPositionImgs_Manual[0], neutralColor);
+            boardPositionImgs_Manual[0].color = neutralColor;
             SwitchMenu(5);
         }
     }
@@ -233,7 +247,7 @@ public class UI : MonoBehaviour
     public void PlaceBird(int bird)
     {
         EventSystem.current.currentSelectedGameObject.SetActive(false); //Disable the placed bird
-        UpdateColor(boardPositionImgs_Manual[manualCurrentSpot], bird); //set the color of the current position
+        boardPositionImgs_Manual[manualCurrentSpot].color = colors[bird]; //set the color of the current position
         manualSolution[manualCurrentSpot] = bird;
         manualCurrentSpot++;
 
@@ -243,7 +257,7 @@ public class UI : MonoBehaviour
             return;
         }
 
-        UpdateColor(boardPositionImgs_Manual[manualCurrentSpot], neutralColor);
+        boardPositionImgs_Manual[manualCurrentSpot].color = neutralColor;
     }
 
     private void Evaluate()
